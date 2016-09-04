@@ -26,15 +26,10 @@ _.extend(TagsMapGenerator.prototype, {
             context: {
                 internal: true
             },
-            filter: 'visibility:public',
             limit: 'all'
         }).then(function (resp) {
             return resp.tags;
         });
-    },
-
-    validateDatum: function (datum) {
-        return datum.visibility === 'public';
     },
 
     getUrlForDatum: function (tag) {

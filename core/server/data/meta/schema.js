@@ -4,25 +4,6 @@ var config = require('../../config'),
     escapeExpression = hbs.handlebars.Utils.escapeExpression,
     _ = require('lodash');
 
-function schemaImageObject(metaDataVal) {
-    var imageObject;
-    if (!metaDataVal) {
-        return null;
-    }
-    if (!metaDataVal.dimensions) {
-        return metaDataVal.url;
-    }
-
-    imageObject = {
-        '@type': 'ImageObject',
-        url: metaDataVal.url,
-        width: metaDataVal.dimensions.width,
-        height: metaDataVal.dimensions.height
-    };
-
-    return imageObject;
-}
-
 // Creates the final schema object with values that are not null
 function trimSchema(schema) {
     var schemaObject = {};
@@ -32,7 +13,6 @@ function trimSchema(schema) {
             schemaObject[key] = value;
         }
     });
-
     return schemaObject;
 }
 
@@ -75,12 +55,12 @@ function getPostSchema(metaData, data) {
         publisher: {
             '@type': 'Organization',
             name: escapeExpression(metaData.blog.title),
-            logo: schemaImageObject(metaData.blog.logo) || null
+            logo: metaData.blog.logo || null
         },
         author: {
             '@type': 'Person',
             name: escapeExpression(data.post.author.name),
-            image: schemaImageObject(metaData.authorImage),
+            image: metaData.authorImage,
             url: metaData.authorUrl,
             sameAs: trimSameAs(data, 'post'),
             description: data.post.author.bio ?
@@ -91,14 +71,10 @@ function getPostSchema(metaData, data) {
         url: metaData.url,
         datePublished: metaData.publishedDate,
         dateModified: metaData.modifiedDate,
-        image: schemaImageObject(metaData.coverImage),
+        image: metaData.coverImage,
         keywords: metaData.keywords && metaData.keywords.length > 0 ?
             metaData.keywords.join(', ') : null,
-        description: description,
-        mainEntityOfPage: {
-            '@type': 'WebPage',
-            '@id': metaData.blog.url || null
-        }
+        description: description
     };
     schema.author = trimSchema(schema.author);
     return trimSchema(schema);
@@ -108,17 +84,9 @@ function getHomeSchema(metaData) {
     var schema = {
         '@context': 'https://schema.org',
         '@type': 'Website',
-        publisher: {
-            '@type': 'Organization',
-            name: escapeExpression(metaData.blog.title),
-            logo: schemaImageObject(metaData.blog.logo) || null
-        },
+        publisher: escapeExpression(metaData.blog.title),
         url: metaData.url,
-        image: schemaImageObject(metaData.coverImage),
-        mainEntityOfPage: {
-            '@type': 'WebPage',
-            '@id': metaData.blog.url || null
-        },
+        image: metaData.coverImage,
         description: metaData.metaDescription ?
         escapeExpression(metaData.metaDescription) :
         null
@@ -130,18 +98,10 @@ function getTagSchema(metaData, data) {
     var schema = {
         '@context': 'https://schema.org',
         '@type': 'Series',
-        publisher: {
-            '@type': 'Organization',
-            name: escapeExpression(metaData.blog.title),
-            logo: schemaImageObject(metaData.blog.logo) || null
-        },
+        publisher: escapeExpression(metaData.blog.title),
         url: metaData.url,
-        image: schemaImageObject(metaData.coverImage),
+        image: metaData.coverImage,
         name: data.tag.name,
-        mainEntityOfPage: {
-            '@type': 'WebPage',
-            '@id': metaData.blog.url || null
-        },
         description: metaData.metaDescription ?
         escapeExpression(metaData.metaDescription) :
         null
@@ -157,11 +117,7 @@ function getAuthorSchema(metaData, data) {
         sameAs: trimSameAs(data, 'author'),
         name: escapeExpression(data.author.name),
         url: metaData.authorUrl,
-        image: schemaImageObject(metaData.coverImage),
-        mainEntityOfPage: {
-            '@type': 'WebPage',
-            '@id': metaData.blog.url || null
-        },
+        image: metaData.coverImage,
         description: metaData.metaDescription ?
         escapeExpression(metaData.metaDescription) :
         null
@@ -172,14 +128,14 @@ function getAuthorSchema(metaData, data) {
 
 function getSchema(metaData, data) {
     if (!config.isPrivacyDisabled('useStructuredData')) {
-        var context = data.context ? data.context : null;
-        if (_.includes(context, 'post') || _.includes(context, 'page') || _.includes(context, 'amp')) {
+        var context = data.context ? data.context[0] : null;
+        if (context === 'post' || context === 'page') {
             return getPostSchema(metaData, data);
-        } else if (_.includes(context, 'home')) {
+        } else if (context === 'home') {
             return getHomeSchema(metaData);
-        } else if (_.includes(context, 'tag')) {
+        } else if (context === 'tag') {
             return getTagSchema(metaData, data);
-        } else if (_.includes(context, 'author')) {
+        } else if (context === 'author') {
             return getAuthorSchema(metaData, data);
         }
     }

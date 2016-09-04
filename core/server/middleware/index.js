@@ -1,9 +1,6 @@
 var bodyParser      = require('body-parser'),
-    compress        = require('compression'),
     config          = require('../config'),
     errors          = require('../errors'),
-    express         = require('express'),
-    hbs             = require('express-hbs'),
     logger          = require('morgan'),
     path            = require('path'),
     routes          = require('../routes'),
@@ -27,13 +24,9 @@ var bodyParser      = require('body-parser'),
     staticTheme      = require('./static-theme'),
     themeHandler     = require('./theme-handler'),
     uncapitalise     = require('./uncapitalise'),
-    maintenance     = require('./maintenance'),
-    versionMatch     = require('./api/version-match'),
     cors             = require('./cors'),
-    validation       = require('./validation'),
     netjet           = require('netjet'),
     labs             = require('./labs'),
-    helpers          = require('../helpers'),
 
     ClientPasswordStrategy  = require('passport-oauth2-client-password').Strategy,
     BearerStrategy          = require('passport-http-bearer').Strategy,
@@ -43,7 +36,6 @@ var bodyParser      = require('body-parser'),
 
 middleware = {
     upload: multer({dest: tmpdir()}),
-    validation: validation,
     cacheControl: cacheControl,
     spamPrevention: spamPrevention,
     oauth: oauth,
@@ -54,39 +46,18 @@ middleware = {
         requiresAuthorizedUserPublicAPI: auth.requiresAuthorizedUserPublicAPI,
         errorHandler: errors.handleAPIError,
         cors: cors,
-        labs: labs,
-        versionMatch: versionMatch,
-        maintenance: maintenance
+        labs: labs
     }
 };
 
-setupMiddleware = function setupMiddleware(blogApp) {
+setupMiddleware = function setupMiddleware(blogApp, adminApp) {
     var logging = config.logging,
-        corePath = config.paths.corePath,
-        adminApp = express(),
-        adminHbs = hbs.create();
+        corePath = config.paths.corePath;
 
-    // ##Configuration
-
-    // enabled gzip compression by default
-    if (config.server.compress !== false) {
-        blogApp.use(compress());
-    }
-
-    // ## View engine
-    // set the view engine
-    blogApp.set('view engine', 'hbs');
-
-    // Create a hbs instance for admin and init view engine
-    adminApp.set('view engine', 'hbs');
-    adminApp.engine('hbs', adminHbs.express3({}));
-
-    // Load helpers
-    helpers.loadCoreHelpers(adminHbs);
-
-    // Initialize Auth Handlers & OAuth middleware
     passport.use(new ClientPasswordStrategy(authStrategies.clientPasswordStrategy));
     passport.use(new BearerStrategy(authStrategies.bearerStrategy));
+
+    // Initialize OAuth middleware
     oauth.init();
 
     // Make sure 'req.secure' is valid for proxied requests
@@ -110,7 +81,6 @@ setupMiddleware = function setupMiddleware(blogApp) {
             }
         }));
     }
-
     // Favicon
     blogApp.use(serveSharedFile('favicon.ico', 'image/x-icon', utils.ONE_DAY_S));
 
@@ -199,13 +169,8 @@ setupMiddleware = function setupMiddleware(blogApp) {
 
     // Mount admin express app to /ghost and set up routes
     adminApp.use(redirectToSetup);
-    adminApp.use(maintenance);
     adminApp.use(routes.admin());
-
     blogApp.use('/ghost', adminApp);
-
-    // send 503 error page in case of maintenance
-    blogApp.use(maintenance);
 
     // Set up Frontend routes (including private blogging routes)
     blogApp.use(routes.frontend());

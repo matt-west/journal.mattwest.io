@@ -1,5 +1,7 @@
 var unidecode  = require('unidecode'),
     _          = require('lodash'),
+    readCSV    = require('./read-csv'),
+
     utils,
     getRandomInt;
 
@@ -100,9 +102,7 @@ utils = {
         res.redirect(301, path);
     },
 
-    readCSV: require('./read-csv'),
-    removeOpenRedirectFromUrl: require('./remove-open-redirect-from-url'),
-    zipFolder: require('./zip-folder')
+    readCSV: readCSV
 };
 
 module.exports = utils;

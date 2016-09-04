@@ -1,12 +1,12 @@
-var config = require('../../config'),
-    _      = require('lodash');
+var config = require('../../config');
 
 function getContextObject(data, context) {
     var blog = config.theme,
         contextObject;
 
-    context = _.includes(context, 'page') || _.includes(context, 'amp') ? 'post' : context;
+    context = context === 'page' ? 'post' : context;
     contextObject = data[context] || blog;
+
     return contextObject;
 }
 

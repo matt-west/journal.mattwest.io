@@ -4,7 +4,7 @@ function getStructuredData(metaData) {
     var structuredData,
         card = 'summary';
 
-    if (metaData.coverImage.url) {
+    if (metaData.coverImage) {
         card = 'summary_large_image';
     }
 
@@ -14,7 +14,7 @@ function getStructuredData(metaData) {
         'og:title': metaData.metaTitle,
         'og:description': metaData.metaDescription || metaData.excerpt,
         'og:url': metaData.canonicalUrl,
-        'og:image': metaData.coverImage.url,
+        'og:image': metaData.coverImage,
         'article:published_time': metaData.publishedDate,
         'article:modified_time': metaData.modifiedDate,
         'article:tag': metaData.keywords,
@@ -24,7 +24,7 @@ function getStructuredData(metaData) {
         'twitter:title': metaData.metaTitle,
         'twitter:description': metaData.metaDescription || metaData.excerpt,
         'twitter:url': metaData.canonicalUrl,
-        'twitter:image': metaData.coverImage.url,
+        'twitter:image:src': metaData.coverImage,
         'twitter:label1': metaData.authorName ? 'Written by' : undefined,
         'twitter:data1': metaData.authorName,
         'twitter:label2': metaData.keywords ? 'Filed under' : undefined,
@@ -32,11 +32,6 @@ function getStructuredData(metaData) {
         'twitter:site': metaData.blog.twitter || undefined,
         'twitter:creator': metaData.creatorTwitter || undefined
     };
-
-    if (metaData.coverImage.dimensions) {
-        structuredData['og:image:width'] = metaData.coverImage.dimensions.width;
-        structuredData['og:image:height'] = metaData.coverImage.dimensions.height;
-    }
 
     // return structured data removing null or undefined keys
     return Object.keys(structuredData).reduce(function (data, key) {

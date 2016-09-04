@@ -1,13 +1,11 @@
-var getContextObject = require('./context_object.js'),
-    _                = require('lodash');
+var getContextObject = require('./context_object.js');
 
 function getCreatorTwitterUrl(data) {
-    var context = data.context ? data.context : null,
+    var context = data.context ? data.context[0] : null,
         contextObject = getContextObject(data, context);
-
-    if ((_.includes(context, 'post') || _.includes(context, 'page')) && contextObject.author && contextObject.author.twitter) {
+    if ((context === 'post' || context === 'page') && contextObject.author && contextObject.author.twitter) {
         return contextObject.author.twitter;
-    } else if (_.includes(context, 'author') && contextObject.twitter) {
+    } else if (context === 'author' && contextObject.twitter) {
         return contextObject.twitter;
     }
     return null;
